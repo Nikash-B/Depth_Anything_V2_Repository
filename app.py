@@ -33,7 +33,7 @@ model_configs = {
 modelVersion = 's' # Should be 's' for small, 'b' for base, or 'l' for large.
 encoder = 'vit' + modelVersion
 model = DepthAnythingV2(**model_configs[encoder])
-state_dict = torch.load(f'checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
+state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
 model.load_state_dict(state_dict)
 model = model.to(DEVICE).eval()
 

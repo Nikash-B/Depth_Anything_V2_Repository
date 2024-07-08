@@ -32,11 +32,8 @@ model_configs = {
 }
 modelVersion = 's' # Should be 's' for small, 'b' for base, or 'l' for large.
 encoder = 'vit' + modelVersion
-dataset = 'hypersim' # 'hypersim' for indoor model, 'vkitti' for outdoor model
-max_depth = 20 # 20 for indoor model, 80 for outdoor model
-
-model = DepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
-state_dict = torch.load(f'checkpoints/depth_anything_v2_metric_{dataset}_{encoder}.pth', map_location="cpu")
+model = DepthAnythingV2(**model_configs[encoder])
+state_dict = torch.load(f'checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
 model.load_state_dict(state_dict)
 model = model.to(DEVICE).eval()
 

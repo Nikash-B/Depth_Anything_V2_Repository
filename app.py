@@ -8,10 +8,10 @@ import tempfile
 # from gradio_imageslider import ImageSlider
 
 # Non-metric model:
-from Depth_Anything_V2_Repository.depth_anything_v2.dpt import DepthAnythingV2
+from Depth_Anything_V2_Repository.depth_anything_v2.dpt import DepthAnythingV2 as NonMetricDepthAnythingV2
 
 # Metric Model:
-# from Depth_Anything_V2_Repository.metric_depth.depth_anything_v2.dpt import DepthAnythingV2
+from Depth_Anything_V2_Repository.metric_depth.depth_anything_v2.dpt import DepthAnythingV2 as MetricDepthAnythingV2
 
 css = """
 #img-display-container {
@@ -39,21 +39,26 @@ encoder = 'vit' + modelVersion
 dataset = 'hypersim' # 'hypersim' for indoor model, 'vkitti' for outdoor model
 max_depth = 20 # 20 for indoor model, 80 for outdoor model
 # Metric model:
-# model = DepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
-# state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_metric_{dataset}_{encoder}.pth', map_location="cpu")
+metric_model = MetricDepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
+metric_state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_metric_{dataset}_{encoder}.pth', map_location="cpu")
+metric_model.load_state_dict(metric_state_dict)
+metric_model.to(DEVICE).eval()
                                  
 # Non-metric model:                    
-model = DepthAnythingV2(**model_configs[encoder])
-state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
-model.load_state_dict(state_dict)
-model.to(DEVICE).eval()
+non_metric_model = NonMetricDepthAnythingV2(**model_configs[encoder])
+non_metric_state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
+non_metric_model.load_state_dict(non_metric_state_dict)
+non_metric_model.to(DEVICE).eval()
 
 # title = "# Depth Anything V2"
 # description = """Official demo for **Depth Anything V2**.
 # Please refer to our [paper](https://arxiv.org/abs/2406.09414), [project page](https://depth-anything-v2.github.io), or [github](https://github.com/DepthAnything/Depth-Anything-V2) for more details."""
 
-def predict_depth(image):
-    return model.infer_image(image)
+def predict_depth(image, use_metric_model):
+    if use_metric_model:
+        return metric_model.infer_image(image)
+    else:
+        return non_metric_model.infer_image(image)
 
 # with gr.Blocks(css=css) as demo:
 #     gr.Markdown(title)

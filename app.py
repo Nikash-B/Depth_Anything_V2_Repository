@@ -28,6 +28,11 @@ css = """
 }
 """
 DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
+
+# Testing
+# DEVICE = 'cpu'
+# print(f"torch.cuda.is_available(): {torch.cuda.is_available()}")
+# print(f"torch.backends.mps.is_available(): {torch.backends.mps.is_available()}")
 model_configs = {
     'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
     'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
@@ -37,27 +42,24 @@ model_configs = {
 modelVersion = 's' # Should be 's' for small, 'b' for base, or 'l' for large.
 encoder = 'vit' + modelVersion
 dataset = 'hypersim' # 'hypersim' for indoor model, 'vkitti' for outdoor model
-max_depth = 20 # 20 for indoor model, 80 for outdoor model
-# Metric model:
-metric_model = MetricDepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
-metric_state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_metric_{dataset}_{encoder}.pth', map_location="cpu")
-metric_model.load_state_dict(metric_state_dict)
-metric_model.to(DEVICE).eval()
-                                 
-# Non-metric model:                    
-non_metric_model = NonMetricDepthAnythingV2(**model_configs[encoder])
-non_metric_state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
-non_metric_model.load_state_dict(non_metric_state_dict)
-non_metric_model.to(DEVICE).eval()
 
 # title = "# Depth Anything V2"
 # description = """Official demo for **Depth Anything V2**.
 # Please refer to our [paper](https://arxiv.org/abs/2406.09414), [project page](https://depth-anything-v2.github.io), or [github](https://github.com/DepthAnything/Depth-Anything-V2) for more details."""
 
-def predict_depth(image, use_metric_model):
-    if use_metric_model:
+def predict_depth(image, use_metric_model, max_depth):
+    # max_depth = 20 # 20 for indoor model, 80 for outdoor model
+    if use_metric_model: # Metric model:
+        metric_model = MetricDepthAnythingV2(**{**model_configs[encoder], 'max_depth': max_depth})
+        metric_state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_metric_{dataset}_{encoder}.pth', map_location="cpu")
+        metric_model.load_state_dict(metric_state_dict)
+        metric_model.to(DEVICE).eval()
         return metric_model.infer_image(image)
-    else:
+    else: # Non-metric model:                    
+        non_metric_model = NonMetricDepthAnythingV2(**model_configs[encoder])
+        non_metric_state_dict = torch.load(f'Depth_Anything_V2_Repository/checkpoints/depth_anything_v2_{encoder}.pth', map_location="cpu")
+        non_metric_model.load_state_dict(non_metric_state_dict)
+        non_metric_model.to(DEVICE).eval()
         return non_metric_model.infer_image(image)
 
 # with gr.Blocks(css=css) as demo:
